@@ -1,5 +1,7 @@
 package name.martingeisse.sneskit.deconstruct;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 import java.io.File;
@@ -17,7 +19,34 @@ public class Deconstructor {
     }
 
     public void run() {
-        System.out.println("ROM size: " + (rom.length >> 20) + " MB");
+
+        JsonElement ruleSetElement = configuration.get("ruleSet");
+        if (ruleSetElement == null) {
+            throw new DeconstructException("no ruleSet defined");
+        }
+        String ruleSetClassName = ruleSetElement.getAsString();
+        RuleSet ruleSet;
+        try {
+            Class<?> ruleSetClass = Class.forName(ruleSetClassName);
+            ruleSet = (RuleSet)ruleSetClass.getConstructor().newInstance();
+        } catch (Exception e) {
+            throw new DeconstructException("could not create ruleSet: " + ruleSetClassName, e);
+        }
+
+        JsonArray rules = configuration.getAsJsonArray("rules");
+        if (rules == null) {
+            throw new DeconstructException("no rules defined");
+        }
+        for (JsonElement element : rules) {
+            JsonObject ruleObject = element.getAsJsonObject();
+            JsonElement typeElement = ruleObject.get("type");
+            if (typeElement == null) {
+                throw new DeconstructException("found rule without type");
+            }
+            String ruleType = typeElement.getAsString();
+            Rule rule = ruleSet.createRule(ruleType);
+            rule.run(ruleObject, rom, partsFolder);
+        }
     }
 
 }
