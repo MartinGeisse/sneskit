@@ -1,0 +1,4 @@
+
+cartidge B-bus is almost never used. Same for /WRAM which is active when the SNES writes to its internal RAM, so there
+is no point in telling the cartridge about it.
+

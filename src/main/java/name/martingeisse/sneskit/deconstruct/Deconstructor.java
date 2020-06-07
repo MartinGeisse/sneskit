@@ -3,8 +3,10 @@ package name.martingeisse.sneskit.deconstruct;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import name.martingeisse.sneskit.util.KitException;
 
 import java.io.File;
+import java.io.IOException;
 
 public class Deconstructor {
 
@@ -18,11 +20,11 @@ public class Deconstructor {
         this.partsFolder = partsFolder;
     }
 
-    public void run() {
+    public void run() throws IOException {
 
         JsonElement ruleSetElement = configuration.get("ruleSet");
         if (ruleSetElement == null) {
-            throw new DeconstructException("no ruleSet defined");
+            throw new KitException("no ruleSet defined");
         }
         String ruleSetClassName = ruleSetElement.getAsString();
         RuleSet ruleSet;
@@ -30,18 +32,18 @@ public class Deconstructor {
             Class<?> ruleSetClass = Class.forName(ruleSetClassName);
             ruleSet = (RuleSet)ruleSetClass.getConstructor().newInstance();
         } catch (Exception e) {
-            throw new DeconstructException("could not create ruleSet: " + ruleSetClassName, e);
+            throw new KitException("could not create ruleSet: " + ruleSetClassName, e);
         }
 
         JsonArray rules = configuration.getAsJsonArray("rules");
         if (rules == null) {
-            throw new DeconstructException("no rules defined");
+            throw new KitException("no rules defined");
         }
         for (JsonElement element : rules) {
             JsonObject ruleObject = element.getAsJsonObject();
             JsonElement typeElement = ruleObject.get("type");
             if (typeElement == null) {
-                throw new DeconstructException("found rule without type");
+                throw new KitException("found rule without type");
             }
             String ruleType = typeElement.getAsString();
             Rule rule = ruleSet.createRule(ruleType);
