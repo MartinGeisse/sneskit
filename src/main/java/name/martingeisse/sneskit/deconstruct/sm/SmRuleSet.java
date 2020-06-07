@@ -1,9 +1,8 @@
 package name.martingeisse.sneskit.deconstruct.sm;
 
-import name.martingeisse.sneskit.deconstruct.rules.AutoMemoryMapRule;
-import name.martingeisse.sneskit.util.KitException;
 import name.martingeisse.sneskit.deconstruct.Rule;
 import name.martingeisse.sneskit.deconstruct.RuleSet;
+import name.martingeisse.sneskit.util.KitException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -13,7 +12,6 @@ public class SmRuleSet implements RuleSet {
     private final Map<String, Class<? extends Rule>> rules = new HashMap<>();
 
     public SmRuleSet() {
-        rules.put("auto-memory-map", AutoMemoryMapRule.class);
         rules.put("test", SmTestRule.class);
     }
 
