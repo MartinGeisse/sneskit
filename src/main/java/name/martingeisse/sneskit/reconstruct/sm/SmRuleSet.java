@@ -2,6 +2,7 @@ package name.martingeisse.sneskit.reconstruct.sm;
 
 import name.martingeisse.sneskit.reconstruct.Rule;
 import name.martingeisse.sneskit.reconstruct.RuleSet;
+import name.martingeisse.sneskit.reconstruct.rules.AsmRule;
 import name.martingeisse.sneskit.util.KitException;
 
 import java.util.HashMap;
@@ -12,7 +13,7 @@ public class SmRuleSet implements RuleSet {
     private final Map<String, Class<? extends Rule>> rules = new HashMap<>();
 
     public SmRuleSet() {
-        rules.put("test", SmTestRule.class);
+        rules.put("asm", AsmRule.class);
     }
 
     @Override

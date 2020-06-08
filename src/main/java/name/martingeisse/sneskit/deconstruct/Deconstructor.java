@@ -57,25 +57,6 @@ public class Deconstructor {
             }
         }
 
-        // generate a header.inc
-        try (FileOutputStream fileOutputStream = new FileOutputStream(new File(partsFolder, "header.inc"))) {
-            try (OutputStreamWriter outputStreamWriter = new OutputStreamWriter(fileOutputStream, StandardCharsets.US_ASCII)) {
-                try (PrintWriter out = new PrintWriter(outputStreamWriter)) {
-                    out.println(".MEMORYMAP");
-                    out.println("  SLOTSIZE $8000");
-                    out.println("  DEFAULTSLOT 0");
-                    out.println("  SLOT 0 $8000");
-                    out.println(".ENDME");
-                    out.println(".ROMBANKSIZE $8000");
-                    out.println(".ROMBANKS 48");
-                }
-            }
-        }
-        /*
-        ;==LoRom==      ; We'll get to HiRom some other time.
-
-         */
-
     }
 
 }

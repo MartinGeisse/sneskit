@@ -4,6 +4,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import name.martingeisse.sneskit.util.KitException;
+import org.apache.commons.io.FileUtils;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -46,6 +47,11 @@ public final class RuleContext {
         String ruleType = typeElement.getAsString();
         Rule rule = ruleSet.createRule(ruleType);
         rule.run(ruleObject, this);
+    }
+
+    public void copyAsmFile(String name, File from) throws IOException {
+        File file = new File(asmFolder, name);
+        FileUtils.copyFile(from, file);
     }
 
     public PrintWriter createAsmFile(String name) throws IOException {
