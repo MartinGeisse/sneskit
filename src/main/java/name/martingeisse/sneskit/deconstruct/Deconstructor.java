@@ -6,10 +6,7 @@ import com.google.gson.JsonObject;
 import name.martingeisse.sneskit.util.JsonUtil;
 import name.martingeisse.sneskit.util.KitException;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 
 public class Deconstructor {
@@ -59,6 +56,25 @@ public class Deconstructor {
                 JsonUtil.GSON.toJson(reconstructJson, outputStreamWriter);
             }
         }
+
+        // generate a header.inc
+        try (FileOutputStream fileOutputStream = new FileOutputStream(new File(partsFolder, "header.inc"))) {
+            try (OutputStreamWriter outputStreamWriter = new OutputStreamWriter(fileOutputStream, StandardCharsets.US_ASCII)) {
+                try (PrintWriter out = new PrintWriter(outputStreamWriter)) {
+                    out.println(".MEMORYMAP");
+                    out.println("  SLOTSIZE $8000");
+                    out.println("  DEFAULTSLOT 0");
+                    out.println("  SLOT 0 $8000");
+                    out.println(".ENDME");
+                    out.println(".ROMBANKSIZE $8000");
+                    out.println(".ROMBANKS 48");
+                }
+            }
+        }
+        /*
+        ;==LoRom==      ; We'll get to HiRom some other time.
+
+         */
 
     }
 
