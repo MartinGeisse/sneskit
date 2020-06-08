@@ -3,6 +3,7 @@ package name.martingeisse.sneskit.deconstruct.rules;
 import com.google.gson.JsonObject;
 import name.martingeisse.sneskit.deconstruct.Rule;
 import name.martingeisse.sneskit.deconstruct.RuleContext;
+import name.martingeisse.sneskit.util.AddressKind;
 import name.martingeisse.sneskit.util.JsonUtil;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.ArrayUtils;
@@ -21,7 +22,7 @@ public abstract class ExtractRuleBase implements Rule {
 
     @Override
     public void run(JsonObject ruleConfiguration, RuleContext context) throws IOException {
-        int address = JsonUtil.getNumber(ruleConfiguration, "address");
+        int address = JsonUtil.getAddress(ruleConfiguration, "address", AddressKind.PHYSICAL);
         int length = determineLength(ruleConfiguration, context);
         File file = new File(context.getPartsFolder(), JsonUtil.getString(ruleConfiguration, "file"));
         byte[] chunk = ArrayUtils.subarray(context.getRom(), address, address + length);
@@ -29,9 +30,9 @@ public abstract class ExtractRuleBase implements Rule {
         FileUtils.writeByteArrayToFile(file, chunk);
     }
 
-    protected abstract int determineLength(JsonObject ruleConfiguration, RuleContext context);
+    protected abstract int determineLength(JsonObject ruleConfiguration, RuleContext context) throws IOException;
 
-    protected byte[] decode(JsonObject ruleConfiguration, byte[] data, RuleContext context) {
+    protected byte[] decode(JsonObject ruleConfiguration, byte[] data, RuleContext context) throws IOException {
         return data;
     }
 

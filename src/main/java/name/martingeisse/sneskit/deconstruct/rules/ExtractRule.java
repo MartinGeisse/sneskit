@@ -4,6 +4,8 @@ import com.google.gson.JsonObject;
 import name.martingeisse.sneskit.deconstruct.RuleContext;
 import name.martingeisse.sneskit.util.JsonUtil;
 
+import java.io.IOException;
+
 /**
  * Extracts a contiguous chunk of bytes from the ROM to a file. The chunk must be specified by start address and length;
  * the file name must be specified. Subclasses can define a decoding method to convert the data before storing it in
@@ -12,7 +14,7 @@ import name.martingeisse.sneskit.util.JsonUtil;
 public class ExtractRule extends ExtractRuleBase {
 
     @Override
-    protected int determineLength(JsonObject ruleConfiguration, RuleContext context) {
+    protected int determineLength(JsonObject ruleConfiguration, RuleContext context) throws IOException {
         return JsonUtil.getNumber(ruleConfiguration, "length");
     }
 
