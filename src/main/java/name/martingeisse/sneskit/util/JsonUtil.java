@@ -1,12 +1,12 @@
 package name.martingeisse.sneskit.util;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonPrimitive;
+import com.google.gson.*;
 
 import java.util.Map;
 
 public final class JsonUtil {
+
+    public static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 
     private JsonUtil() {
     }

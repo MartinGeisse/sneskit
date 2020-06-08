@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import name.martingeisse.sneskit.deconstruct.Deconstructor;
+import name.martingeisse.sneskit.util.JsonUtil;
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
@@ -14,8 +15,6 @@ import java.nio.charset.StandardCharsets;
 
 public class Deconstruct {
 
-    private static final Gson GSON = new GsonBuilder().create();
-
     public static void main(String[] args) throws Exception {
 
         // read configuration
@@ -24,7 +23,7 @@ public class Deconstruct {
         if (deconstructJson.isFile()) {
             try (FileInputStream fileInputStream = new FileInputStream(deconstructJson)) {
                 try (InputStreamReader inputStreamReader = new InputStreamReader(fileInputStream, StandardCharsets.UTF_8)) {
-                    configuration = GSON.fromJson(inputStreamReader, JsonObject.class);
+                    configuration = JsonUtil.GSON.fromJson(inputStreamReader, JsonObject.class);
                 }
             }
         } else if (deconstructJson.exists()) {

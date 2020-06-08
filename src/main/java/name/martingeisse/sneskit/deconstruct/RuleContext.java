@@ -1,5 +1,6 @@
 package name.martingeisse.sneskit.deconstruct;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import name.martingeisse.sneskit.util.KitException;
@@ -13,12 +14,14 @@ public final class RuleContext {
     private final byte[] rom;
     private final File partsFolder;
     private final RuleSet ruleSet;
+    private final JsonArray reconstructRules;
 
     public RuleContext(JsonObject deconstructJson, byte[] rom, File partsFolder, RuleSet ruleSet) {
         this.deconstructJson = deconstructJson;
         this.rom = rom;
         this.partsFolder = partsFolder;
         this.ruleSet = ruleSet;
+        this.reconstructRules = new JsonArray();
     }
 
     public JsonObject getDeconstructJson() {
@@ -35,6 +38,14 @@ public final class RuleContext {
 
     public RuleSet getRuleSet() {
         return ruleSet;
+    }
+
+    public void addReconstructRule(JsonObject rule) {
+        reconstructRules.add(rule);
+    }
+
+    JsonArray getReconstructRules() {
+        return reconstructRules;
     }
 
     public void applyRule(JsonObject ruleObject) throws IOException {
