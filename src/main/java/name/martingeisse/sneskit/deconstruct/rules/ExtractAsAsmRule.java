@@ -2,6 +2,7 @@ package name.martingeisse.sneskit.deconstruct.rules;
 
 import com.google.gson.JsonObject;
 import name.martingeisse.sneskit.deconstruct.RuleContext;
+import name.martingeisse.sneskit.deconstruct.disasm.Disassembler;
 import name.martingeisse.sneskit.util.AddressKind;
 import name.martingeisse.sneskit.util.JsonUtil;
 
@@ -13,6 +14,8 @@ import java.io.PrintWriter;
  * reconstruction: Because we *can* convert data to ASM this way, and ASM is more readable and editable, we avoid
  * having a binary-to-ASM converter on the reconstruction side, so a binary file made with ExtractRule itself cannot be
  * used for reconstruction.
+ *
+ * The {@link Disassembler} will be used to extract disassembled code instead of raw bytes whenever possible.
  */
 public class ExtractAsAsmRule extends ExtractTextRule {
 
@@ -29,8 +32,9 @@ public class ExtractAsAsmRule extends ExtractTextRule {
         out.println(".org $" + Integer.toHexString(address & 0x7fff));
         out.println();
 
-        for (byte b : data) {
-            out.println(".db $" + Integer.toHexString(b & 0xff));
+        // the data array contains the same data as the rom array, and the disassembler takes it from the rom
+        for (int i = 0; i < data.length; i++) {
+            context.getDisassembler().writeEffectiveLinesForPhysicalAddress(address + i, out);
         }
 
         JsonObject reconstructRule = new JsonObject();

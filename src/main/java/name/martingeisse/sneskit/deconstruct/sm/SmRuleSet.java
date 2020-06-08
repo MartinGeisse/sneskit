@@ -2,6 +2,7 @@ package name.martingeisse.sneskit.deconstruct.sm;
 
 import name.martingeisse.sneskit.deconstruct.Rule;
 import name.martingeisse.sneskit.deconstruct.RuleSet;
+import name.martingeisse.sneskit.deconstruct.disasm.DisassembleInterruptRoutinesRule;
 import name.martingeisse.sneskit.deconstruct.rules.ExtractAsAsmRule;
 import name.martingeisse.sneskit.deconstruct.rules.SimilarRule;
 import name.martingeisse.sneskit.util.KitException;
@@ -18,6 +19,7 @@ public class SmRuleSet implements RuleSet {
         // generic rules
         rules.put("similar", SimilarRule.class);
         rules.put("data", ExtractAsAsmRule.class);
+        rules.put("disassemble-interrupt-routines", DisassembleInterruptRoutinesRule.class);
 
         // SM rules
         rules.put("tileset", TilesetRule.class);

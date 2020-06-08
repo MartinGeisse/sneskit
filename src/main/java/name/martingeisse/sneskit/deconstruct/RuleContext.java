@@ -3,6 +3,7 @@ package name.martingeisse.sneskit.deconstruct;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import name.martingeisse.sneskit.deconstruct.disasm.Disassembler;
 import name.martingeisse.sneskit.util.KitException;
 
 import java.io.File;
@@ -15,6 +16,7 @@ public final class RuleContext {
     private final File partsFolder;
     private final RuleSet ruleSet;
     private final JsonArray reconstructRules;
+    private final Disassembler disassembler;
 
     public RuleContext(JsonObject deconstructJson, byte[] rom, File partsFolder, RuleSet ruleSet) {
         this.deconstructJson = deconstructJson;
@@ -22,6 +24,7 @@ public final class RuleContext {
         this.partsFolder = partsFolder;
         this.ruleSet = ruleSet;
         this.reconstructRules = new JsonArray();
+        this.disassembler = new Disassembler(rom);
     }
 
     public JsonObject getDeconstructJson() {
@@ -56,6 +59,10 @@ public final class RuleContext {
         String ruleType = typeElement.getAsString();
         Rule rule = ruleSet.createRule(ruleType);
         rule.run(ruleObject, this);
+    }
+
+    public Disassembler getDisassembler() {
+        return disassembler;
     }
 
 }
