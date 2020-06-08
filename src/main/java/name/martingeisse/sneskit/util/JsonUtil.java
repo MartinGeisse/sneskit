@@ -4,6 +4,8 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 
+import java.util.Map;
+
 public final class JsonUtil {
 
     private JsonUtil() {
@@ -41,6 +43,16 @@ public final class JsonUtil {
             }
         }
         throw new KitException(name + " is not a number: " + element);
+    }
+
+    public static JsonObject getShallowMerged(JsonObject... objects) {
+        JsonObject result = new JsonObject();
+        for (JsonObject o : objects) {
+            for (Map.Entry<String, JsonElement> entry : o.entrySet()) {
+                result.add(entry.getKey(), entry.getValue());
+            }
+        }
+        return result;
     }
 
 }

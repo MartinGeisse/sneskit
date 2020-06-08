@@ -12,7 +12,6 @@ public class SmRuleSet implements RuleSet {
     private final Map<String, Class<? extends Rule>> rules = new HashMap<>();
 
     public SmRuleSet() {
-        rules.put("test", SmTestRule.class);
         rules.put("tileset", TilesetRule.class);
     }
 

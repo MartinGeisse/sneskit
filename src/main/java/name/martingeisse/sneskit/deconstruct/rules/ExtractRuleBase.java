@@ -2,6 +2,7 @@ package name.martingeisse.sneskit.deconstruct.rules;
 
 import com.google.gson.JsonObject;
 import name.martingeisse.sneskit.deconstruct.Rule;
+import name.martingeisse.sneskit.deconstruct.RuleContext;
 import name.martingeisse.sneskit.util.JsonUtil;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.ArrayUtils;
@@ -19,18 +20,18 @@ import java.io.IOException;
 public abstract class ExtractRuleBase implements Rule {
 
     @Override
-    public void run(JsonObject ruleConfiguration, byte[] rom, File partsFolder) throws IOException {
+    public void run(JsonObject ruleConfiguration, RuleContext context) throws IOException {
         int address = JsonUtil.getNumber(ruleConfiguration, "address");
-        int length = determineLength(ruleConfiguration, rom);
-        File file = new File(partsFolder, JsonUtil.getString(ruleConfiguration, "file"));
-        byte[] chunk = ArrayUtils.subarray(rom, address, address + length);
-        chunk = decode(ruleConfiguration, chunk, partsFolder);
+        int length = determineLength(ruleConfiguration, context);
+        File file = new File(context.getPartsFolder(), JsonUtil.getString(ruleConfiguration, "file"));
+        byte[] chunk = ArrayUtils.subarray(context.getRom(), address, address + length);
+        chunk = decode(ruleConfiguration, chunk, context);
         FileUtils.writeByteArrayToFile(file, chunk);
     }
 
-    protected abstract int determineLength(JsonObject ruleConfiguration, byte[] rom);
+    protected abstract int determineLength(JsonObject ruleConfiguration, RuleContext context);
 
-    protected byte[] decode(JsonObject ruleConfiguration, byte[] data, File partsFolder) {
+    protected byte[] decode(JsonObject ruleConfiguration, byte[] data, RuleContext context) {
         return data;
     }
 

@@ -1,18 +1,18 @@
 package name.martingeisse.sneskit.deconstruct.sm;
 
 import com.google.gson.JsonObject;
+import name.martingeisse.sneskit.deconstruct.RuleContext;
 import name.martingeisse.sneskit.deconstruct.rules.ExtractRule;
 import name.martingeisse.sneskit.util.KitException;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 
 public class TilesetRule extends ExtractRule {
 
     @Override
-    protected byte[] decode(JsonObject ruleConfiguration, byte[] data, File partsFolder) {
+    protected byte[] decode(JsonObject ruleConfiguration, byte[] data, RuleContext context) {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         try (OutputStreamWriter w = new OutputStreamWriter(baos)) {
             int numberOfTiles = data.length / 32;

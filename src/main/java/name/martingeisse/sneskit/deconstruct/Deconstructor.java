@@ -22,6 +22,7 @@ public class Deconstructor {
 
     public void run() throws IOException {
 
+        // instantiate the rule set
         JsonElement ruleSetElement = configuration.get("ruleSet");
         if (ruleSetElement == null) {
             throw new KitException("no ruleSet defined");
@@ -35,20 +36,16 @@ public class Deconstructor {
             throw new KitException("could not create ruleSet: " + ruleSetClassName, e);
         }
 
+        // apply all rules from the "rules" field
+        RuleContext ruleContext = new RuleContext(configuration, rom, partsFolder, ruleSet);
         JsonArray rules = configuration.getAsJsonArray("rules");
         if (rules == null) {
             throw new KitException("no rules defined");
         }
         for (JsonElement element : rules) {
-            JsonObject ruleObject = element.getAsJsonObject();
-            JsonElement typeElement = ruleObject.get("type");
-            if (typeElement == null) {
-                throw new KitException("found rule without type");
-            }
-            String ruleType = typeElement.getAsString();
-            Rule rule = ruleSet.createRule(ruleType);
-            rule.run(ruleObject, rom, partsFolder);
+            ruleContext.applyRule(element.getAsJsonObject());
         }
+
     }
 
 }
