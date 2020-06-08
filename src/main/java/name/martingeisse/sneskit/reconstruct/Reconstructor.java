@@ -54,7 +54,7 @@ public class Reconstructor {
             ruleContext.applyRule(element.getAsJsonObject());
         }
 
-        // generate a header.inc (currently fixed for a LoROM with 48 banks)
+        // generate a header.inc (currently fixed for a LoROM with 96 32k-banks)
         try (FileOutputStream fileOutputStream = new FileOutputStream(new File(buildFolder, "header.inc"))) {
             try (OutputStreamWriter outputStreamWriter = new OutputStreamWriter(fileOutputStream, StandardCharsets.US_ASCII)) {
                 try (PrintWriter out = new PrintWriter(outputStreamWriter)) {
@@ -64,7 +64,7 @@ public class Reconstructor {
                     out.println("  SLOT 0 $8000");
                     out.println(".ENDME");
                     out.println(".ROMBANKSIZE $8000");
-                    out.println(".ROMBANKS 48");
+                    out.println(".ROMBANKS 96");
                 }
             }
         }
@@ -106,7 +106,16 @@ public class Reconstructor {
             Process process = Runtime.getRuntime().exec(commandLine, null, buildFolder);
             int status = process.waitFor();
             if (status != 0) {
-                throw new KitException("build tool returned status code " + status);
+                System.err.println();
+                System.err.println("********************************");
+                System.err.println("*** ERROR WHILE BUILDING ROM ***");
+                System.err.println("********************************");
+                System.err.println();
+                IOUtils.copy(process.getInputStream(), System.err);
+                IOUtils.copy(process.getErrorStream(), System.err);
+                System.err.println("tool status code " + status);
+                System.err.flush();
+                System.exit(1);
             }
         } catch (IOException|InterruptedException e) {
             throw new KitException("could not invoke build tool", e);
