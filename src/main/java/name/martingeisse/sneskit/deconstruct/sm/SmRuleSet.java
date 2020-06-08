@@ -13,6 +13,7 @@ public class SmRuleSet implements RuleSet {
 
     public SmRuleSet() {
         rules.put("test", SmTestRule.class);
+        rules.put("tileset", TilesetRule.class);
     }
 
     @Override

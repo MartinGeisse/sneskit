@@ -2,3 +2,32 @@
 cartidge B-bus is almost never used. Same for /WRAM which is active when the SNES writes to its internal RAM, so there
 is no point in telling the cartridge about it.
 
+Tilemap for the "zoomer" enemy: 2 bytes define one row of 8 pixels:
+
+    byte 0, high nibble: first color bit of the first four pixels
+    byte 0, low nibble: first color bit of the second four pixels
+    byte 1, high nibble: second color bit of the first four pixels
+    byte 1, low nibble: second color bit of the second four pixels
+
+16 bytes define 8 pixel rows this way. Next, 2 more color bits per pixel follow in the same way. I considered that
+SM overlays a second sprite here, but the screen pixels affected by these "new" bits still show differences based on
+the "old" bits, so the pixels are not overdrawn but their bits combined.
+
+After that, another 8x8 block starts, so we're probably in the next character, maybe even the next sprite (but this
+distinction is not relevant for the tileset format).
+-->
+The SNES works with "OAM slots" which can be 8x8 or 16x16 pixels large. There are 128 OAM slots. This avoids
+ambiguity WRT "characters" and "sprites". It seems that the SM zoomer is built out of multiple OAM slots. There is
+also a limit on number of OAM slots on the same screen pixel row (don't know how 16x16 slots are counted here)
+which leads to flickering.
+
+Note that with characters being 8x8 pixels large, an SM "game tile" must be 2x2 characters (they're 16x16 pixels).
+
+According to https://megacatstudios.com/blogs/press/snes-sprite-engine-design-guidelines
+a game must choose a set of two OAM slot sizes, and each OAM slot has one bit to choose one of those two sizes.
+
+Application code must also allocate VRAM to the sprites, and the OAM slots refer to that VRAM. This mapping is
+application-defined. Address flipping can be used for animation, but if all animated data for all sprites is too
+large for VRAM, it must be streamed into VRAM every frame.
+
+
