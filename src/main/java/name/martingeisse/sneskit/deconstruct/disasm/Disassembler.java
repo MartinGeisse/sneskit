@@ -2,10 +2,10 @@ package name.martingeisse.sneskit.deconstruct.disasm;
 
 import name.martingeisse.sneskit.util.AddressUtil;
 import name.martingeisse.sneskit.util.KitException;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.PrintWriter;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 public class Disassembler {
 
@@ -17,6 +17,7 @@ public class Disassembler {
     private final byte[] rom;
     private final Map<Integer, String[]> codeFragments = new HashMap<>(); // keys are physical addresses
     private final Map<Integer, InstructionFormat> assumedInstructionFormats = new HashMap<>(); // keys are physical addresses
+    private final Queue<Pair<Integer, InstructionFormat>> virtualAddressTodoQueue = new ArrayDeque<>();
 
     public Disassembler(byte[] rom) {
         this.rom = rom;
@@ -58,42 +59,60 @@ public class Disassembler {
 
 //region instruction disassembling
 
+    // virtualAddressTodoQueue
+
     public void disassemble(int virtualAddress, InstructionFormat assumedFormat) {
-        int physicalAddress = AddressUtil.virtualToPhysical(virtualAddress);
-        try {
-            if (getDisassembledLinesForPhysicalAddress(physicalAddress) != null) {
-                InstructionFormat alreadyDisassembledFormat = assumedInstructionFormats.get(physicalAddress);
-                if (assumedFormat == alreadyDisassembledFormat || alreadyDisassembledFormat == InstructionFormat.UNKNOWN) {
-                    // nothing to do, we already disassembled this instruction
-                    return;
+        virtualAddressTodoQueue.add(Pair.of(virtualAddress, assumedFormat));
+        processTodoQueue();
+    }
+
+    public void processTodoQueue() {
+        while (!virtualAddressTodoQueue.isEmpty()) {
+            Pair<Integer, InstructionFormat> element = virtualAddressTodoQueue.poll();
+            int virtualAddress = element.getLeft();
+            InstructionFormat assumedFormat = element.getRight();
+            int physicalAddress = AddressUtil.virtualToPhysical(virtualAddress);
+            try {
+                if (getDisassembledLinesForPhysicalAddress(physicalAddress) != null) {
+                    InstructionFormat alreadyDisassembledFormat = assumedInstructionFormats.get(physicalAddress);
+                    if (assumedFormat == alreadyDisassembledFormat || alreadyDisassembledFormat == InstructionFormat.UNKNOWN) {
+                        // nothing to do, we already disassembled this instruction
+                        return;
+                    }
+                    // we must disassemble this instruction again assuming UNKNOWN format since it is reachable with different formats
+                    assumedFormat = InstructionFormat.UNKNOWN;
                 }
-                // we must disassemble this instruction again assuming UNKNOWN format since it is reachable with different formats
-                assumedFormat = InstructionFormat.UNKNOWN;
-            }
-            int opcode = rom[physicalAddress] & 0xff;
-            InstructionTable.Entry instruction = InstructionTable.TABLE[opcode];
-            String instructionLine;
-            int length;
-            if (instruction == null) {
-                // at least we tried
-                instructionLine = ".db $" + Integer.toHexString(rom[physicalAddress] & 0xff) + " ; disassembly failed";
-                length = 1;
-            } else {
-                StringBuilder lineBuilder = new StringBuilder();
-                length = instruction.getLength().getActualLength(assumedFormat);
-                for (int i = 0; i < length; i++) {
-                    lineBuilder.append(i == 0 ? ".db $" : ", $").append(Integer.toHexString(rom[physicalAddress + i] & 0xff))
-                            .append(" ; ").append(instruction.getMnemonic());
+                int opcode = rom[physicalAddress] & 0xff;
+                InstructionTable.Entry instruction = InstructionTable.TABLE[opcode];
+                String instructionLine;
+                int length;
+                boolean divert;
+                if (instruction == null) {
+                    // at least we tried
+                    instructionLine = ".db $" + Integer.toHexString(rom[physicalAddress] & 0xff) + " ; disassembly failed";
+                    length = 1;
+                    divert = true;
+                } else {
+                    StringBuilder lineBuilder = new StringBuilder();
+                    length = instruction.getLength().getActualLength(assumedFormat);
+                    for (int i = 0; i < length; i++) {
+                        lineBuilder.append(i == 0 ? ".db $" : ", $").append(Integer.toHexString(rom[physicalAddress + i] & 0xff))
+                                .append(" ; ").append(instruction.getMnemonic());
+                    }
+                    instructionLine = lineBuilder.toString();
+                    divert = instruction.isDivert();
                 }
-                instructionLine = lineBuilder.toString();
+                String[] lines = isPrintAddress(virtualAddress, length) ?
+                        new String[]{"; virtual address: $" + Integer.toHexString(virtualAddress), instructionLine} :
+                        new String[]{instructionLine};
+                codeFragments.put(physicalAddress, lines);
+                if (!divert) {
+                    virtualAddressTodoQueue.add(Pair.of(virtualAddress + length, assumedFormat));
+                }
+            } catch (Exception e) {
+                throw new KitException("failed to disassemble instruction at v0x" + Integer.toHexString(virtualAddress) +
+                        " = p0x" + Integer.toHexString(physicalAddress), e);
             }
-            String[] lines = isPrintAddress(virtualAddress, length) ?
-                    new String[]{"; virtual address: $" + Integer.toHexString(virtualAddress), instructionLine} :
-                    new String[]{instructionLine};
-            codeFragments.put(physicalAddress, lines);
-        } catch (Exception e) {
-            throw new KitException("failed to disassemble instruction at v0x" + Integer.toHexString(virtualAddress) +
-                    " = p0x" + Integer.toHexString(physicalAddress), e);
         }
     }
 
