@@ -1,6 +1,7 @@
 package name.martingeisse.sneskit.deconstruct.disasm;
 
 import name.martingeisse.sneskit.util.AddressUtil;
+import name.martingeisse.sneskit.util.KitException;
 
 import java.io.PrintWriter;
 import java.util.HashMap;
@@ -8,35 +9,37 @@ import java.util.Map;
 
 public class Disassembler {
 
+//region general
+
     // Placed as disassembled code in the addresses after a multi-byte instruction, so they don't get emitted as data.
     private static final String[] SHADOWED = new String[0];
 
     private final byte[] rom;
     private final Map<Integer, String[]> codeFragments = new HashMap<>(); // keys are physical addresses
+    private final Map<Integer, InstructionFormat> assumedInstructionFormats = new HashMap<>(); // keys are physical addresses
 
     public Disassembler(byte[] rom) {
         this.rom = rom;
     }
 
-    private void setDisassembled(int physicalAddress, int byteCount, String... lines) {
+    private void setDisassembled(int physicalAddress, InstructionFormat assumedFormat, int byteCount, String... lines) {
+        if (getDisassembledLinesForPhysicalAddress(physicalAddress) != null) {
+            throw new IllegalStateException("code has been disassembled already");
+        }
         if (byteCount < 1) {
             throw new IllegalArgumentException("disassembled code must represent at least one byte, was: " + byteCount);
         }
         codeFragments.put(physicalAddress, lines);
+        assumedInstructionFormats.put(physicalAddress, assumedFormat);
         for (int i = 1; i < byteCount; i++) {
             codeFragments.put(physicalAddress + i, SHADOWED);
         }
     }
 
-    public void disassemble(int virtualAddress) {
-        // dummy
-        int physicalAddress = AddressUtil.virtualToPhysical(virtualAddress);
-        codeFragments.put(physicalAddress, new String[]{
-                "  .db $" + Integer.toHexString(rom[physicalAddress] & 0xff) + " ; disassembled"
-        });
-    }
-
     public String[] getDisassembledLinesForPhysicalAddress(int physicalAddress) {
+        if (physicalAddress < 0 || physicalAddress >= rom.length) {
+            throw new IllegalArgumentException("physical address out of bounds: " + Integer.toHexString(physicalAddress));
+        }
         return codeFragments.get(physicalAddress);
     }
 
@@ -50,5 +53,65 @@ public class Disassembler {
             }
         }
     }
+
+//endregion
+
+//region instruction disassembling
+
+    public void disassemble(int virtualAddress, InstructionFormat assumedFormat) {
+        int physicalAddress = AddressUtil.virtualToPhysical(virtualAddress);
+        try {
+            if (getDisassembledLinesForPhysicalAddress(physicalAddress) != null) {
+                InstructionFormat alreadyDisassembledFormat = assumedInstructionFormats.get(physicalAddress);
+                if (assumedFormat == alreadyDisassembledFormat || alreadyDisassembledFormat == InstructionFormat.UNKNOWN) {
+                    // nothing to do, we already disassembled this instruction
+                    return;
+                }
+                // we must disassemble this instruction again assuming UNKNOWN format since it is reachable with different formats
+                assumedFormat = InstructionFormat.UNKNOWN;
+            }
+            int opcode = rom[physicalAddress] & 0xff;
+            InstructionTable.Entry instruction = InstructionTable.TABLE[opcode];
+            if (instruction == null) {
+                // at least we tried
+                return;
+            }
+            StringBuilder lineBuilder = new StringBuilder();
+            int length = instruction.getLength().getActualLength(assumedFormat);
+            for (int i = 0; i < length; i++) {
+                lineBuilder.append(i == 0 ? ".db $" : ", $").append(Integer.toHexString(rom[physicalAddress + i] & 0xff))
+                        .append(" ; ").append(instruction.getMnemonic());
+            }
+            String[] lines = isPrintAddress(virtualAddress, length) ?
+                    new String[]{"; virtual address: $" + Integer.toHexString(virtualAddress), lineBuilder.toString()} :
+                    new String[]{lineBuilder.toString()};
+            codeFragments.put(physicalAddress, new String[]{lineBuilder.toString()});
+        } catch (Exception e) {
+            throw new KitException("failed to disassemble instruction at v0x" + Integer.toHexString(virtualAddress) +
+                    " = p0x" + Integer.toHexString(physicalAddress), e);
+        }
+    }
+
+    private static boolean isPrintAddress(int address, int length) {
+
+        // print address for an instruction at a 16-byte boundary
+        if ((address & 15) == 0) {
+            return true;
+        }
+
+        // do not print address if the next instruction is at a 16-byte bounary, since that one will print it
+        int address2 = address + length;
+        if ((address2 & 15) == 0) {
+            return false;
+        }
+
+        // otherwise, print the address when we are crossing a 16-byte boundary
+        int hi0 = address & ~15;
+        int hi1 = address2 & ~15;
+        return hi0 != hi1;
+
+    }
+
+//endregion
 
 }
