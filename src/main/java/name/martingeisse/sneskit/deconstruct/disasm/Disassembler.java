@@ -72,20 +72,25 @@ public class Disassembler {
             }
             int opcode = rom[physicalAddress] & 0xff;
             InstructionTable.Entry instruction = InstructionTable.TABLE[opcode];
+            String instructionLine;
+            int length;
             if (instruction == null) {
                 // at least we tried
-                return;
-            }
-            StringBuilder lineBuilder = new StringBuilder();
-            int length = instruction.getLength().getActualLength(assumedFormat);
-            for (int i = 0; i < length; i++) {
-                lineBuilder.append(i == 0 ? ".db $" : ", $").append(Integer.toHexString(rom[physicalAddress + i] & 0xff))
-                        .append(" ; ").append(instruction.getMnemonic());
+                instructionLine = ".db $" + Integer.toHexString(rom[physicalAddress] & 0xff) + " ; disassembly failed";
+                length = 1;
+            } else {
+                StringBuilder lineBuilder = new StringBuilder();
+                length = instruction.getLength().getActualLength(assumedFormat);
+                for (int i = 0; i < length; i++) {
+                    lineBuilder.append(i == 0 ? ".db $" : ", $").append(Integer.toHexString(rom[physicalAddress + i] & 0xff))
+                            .append(" ; ").append(instruction.getMnemonic());
+                }
+                instructionLine = lineBuilder.toString();
             }
             String[] lines = isPrintAddress(virtualAddress, length) ?
-                    new String[]{"; virtual address: $" + Integer.toHexString(virtualAddress), lineBuilder.toString()} :
-                    new String[]{lineBuilder.toString()};
-            codeFragments.put(physicalAddress, new String[]{lineBuilder.toString()});
+                    new String[]{"; virtual address: $" + Integer.toHexString(virtualAddress), instructionLine} :
+                    new String[]{instructionLine};
+            codeFragments.put(physicalAddress, lines);
         } catch (Exception e) {
             throw new KitException("failed to disassemble instruction at v0x" + Integer.toHexString(virtualAddress) +
                     " = p0x" + Integer.toHexString(physicalAddress), e);

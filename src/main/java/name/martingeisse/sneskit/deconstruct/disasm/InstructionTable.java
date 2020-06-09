@@ -107,7 +107,7 @@ public final class InstructionTable {
             null,
             null,
             null,
-            null,
+            new Entry("JMP (long)", 4).diverting(),
             null,
             null,
             null,
@@ -139,7 +139,7 @@ public final class InstructionTable {
             null,
             null,
             null,
-            null,
+            new Entry("SEI", 1),
             null,
             null,
             null,
@@ -299,15 +299,24 @@ public final class InstructionTable {
 
         private final String mnemonic;
         private final InstructionLength length;
+        private final boolean divert;
 
-        public Entry(String mnemonic, InstructionLength length) {
+        private Entry(String mnemonic, InstructionLength length, boolean divert) {
             this.mnemonic = mnemonic;
             this.length = length;
+            this.divert = divert;
+        }
+
+        public Entry(String mnemonic, InstructionLength length) {
+            this(mnemonic, length, false);
         }
 
         public Entry(String mnemonic, int length) {
-            this.mnemonic = mnemonic;
-            this.length = InstructionLength.getFixed(length);
+            this(mnemonic, InstructionLength.getFixed(length), false);
+        }
+
+        public Entry diverting() {
+            return new Entry(mnemonic, length, true);
         }
 
         public String getMnemonic() {
@@ -316,6 +325,10 @@ public final class InstructionTable {
 
         public InstructionLength getLength() {
             return length;
+        }
+
+        public boolean isDivert() {
+            return divert;
         }
 
     }
