@@ -7,7 +7,7 @@ public final class InstructionTable {
             // 00-07
             new Entry("BRK ...", AddressingMode.IMPLIED, 2), // defined as 1-byte but effectively 2-byte
             new Entry("ORA ...", AddressingMode.DIRECT_X_POINTER, 2),
-            new Entry("COP ...", AddressingMode.IMPLIED, 2),
+            new Entry("COP ...", AddressingMode.IMMEDIATE_8, 2),
             new Entry("ORA ...", AddressingMode.STACK_S, 2),
             new Entry("TSB ...", AddressingMode.DIRECT, 2),
             new Entry("ORA ...", AddressingMode.DIRECT, 2),
@@ -52,11 +52,11 @@ public final class InstructionTable {
             new Entry("BIT ...", AddressingMode.DIRECT, 2),
             new Entry("AND ...", AddressingMode.DIRECT, 2),
             new Entry("ROL ...", AddressingMode.DIRECT, 2),
-            new Entry("AND ...", AddressingMode.DIRECT_POINTER, 2),
+            new Entry("AND ...", AddressingMode.DIRECT_LONGPOINTER, 2),
 
             // 28-2f
             new Entry("PLP", AddressingMode.IMPLIED, 1).withSpecialEffect(InstructionSpecialEffect.PLP),
-            new Entry("AND ...", AddressingMode.IMMEDIATE_X, InstructionLength.A23),
+            new Entry("AND ...", AddressingMode.IMMEDIATE_A, InstructionLength.A23),
             new Entry("ROL ...", AddressingMode.IMPLIED, 1),
             new Entry("PLD", AddressingMode.IMPLIED, 1),
             new Entry("BIT ...", AddressingMode.ABSOLUTE, 3),
@@ -92,7 +92,7 @@ public final class InstructionTable {
             new Entry("MVP ...", AddressingMode.IMMEDIATE_16, 3),
             new Entry("EOR ...", AddressingMode.DIRECT, 2),
             new Entry("LSR ...", AddressingMode.DIRECT, 2),
-            new Entry("EOR ...", AddressingMode.DIRECT_POINTER, 2),
+            new Entry("EOR ...", AddressingMode.DIRECT_LONGPOINTER, 2),
 
             // 48-4f
             new Entry("PHA", AddressingMode.IMPLIED, 1),
@@ -126,13 +126,13 @@ public final class InstructionTable {
 
             // 60-67
             new Entry("RTS", AddressingMode.IMPLIED, 1),
-            new Entry("ADC ...", AddressingMode.DIRECT_X_POINTER, -1),
+            new Entry("ADC ...", AddressingMode.DIRECT_X_POINTER, 2),
             new Entry("PER ...", AddressingMode.IMMEDIATE_16, 3),
-            new Entry("ADC ...", AddressingMode.STACK_S, -1),
+            new Entry("ADC ...", AddressingMode.STACK_S, 2),
             new Entry("STZ ...", AddressingMode.DIRECT, 2),
-            new Entry("ADC ...", AddressingMode.DIRECT, -1),
+            new Entry("ADC ...", AddressingMode.DIRECT, 2),
             new Entry("ROR ...", AddressingMode.DIRECT, 2),
-            new Entry("ADC ...", AddressingMode.DIRECT_POINTER, 2),
+            new Entry("ADC ...", AddressingMode.DIRECT_LONGPOINTER, 2),
 
             // 68-6f
             new Entry("PLA", AddressingMode.IMPLIED, 1),
@@ -252,7 +252,7 @@ public final class InstructionTable {
             new Entry("CPY ...", AddressingMode.DIRECT, 2),
             new Entry("CMP ...", AddressingMode.DIRECT, 2),
             new Entry("DEC ...", AddressingMode.DIRECT, 2),
-            new Entry("CMP ...", AddressingMode.DIRECT_POINTER, 2),
+            new Entry("CMP ...", AddressingMode.DIRECT_LONGPOINTER, 2),
 
             // c8-cf
             new Entry("INY ...", AddressingMode.IMPLIED, 1),
@@ -292,7 +292,7 @@ public final class InstructionTable {
             new Entry("CPX ...", AddressingMode.DIRECT, 2),
             new Entry("SBC ...", AddressingMode.DIRECT, 2),
             new Entry("INC ...", AddressingMode.DIRECT, 2),
-            new Entry("SBC ...", AddressingMode.DIRECT_POINTER, 2),
+            new Entry("SBC ...", AddressingMode.DIRECT_LONGPOINTER, 2),
 
             // e8-ef
             new Entry("INX ...", AddressingMode.IMPLIED, 1),
