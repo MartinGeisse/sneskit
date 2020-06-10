@@ -8,6 +8,13 @@ public enum InstructionSpecialEffect {
 
     NONE,
 
+    PLP {
+        @Override
+        public InstructionFormat getNextInstructionFormat(InstructionFormat current, int immediateValue) {
+            return InstructionFormat.UNKNOWN;
+        }
+    },
+
     REP {
         @Override
         public InstructionFormat getNextInstructionFormat(InstructionFormat current, int immediateValue) {

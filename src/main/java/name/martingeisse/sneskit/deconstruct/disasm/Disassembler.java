@@ -24,9 +24,6 @@ public class Disassembler {
     }
 
     private void setDisassembled(int physicalAddress, InstructionFormat assumedFormat, int byteCount, String... lines) {
-        if (getDisassembledLinesForPhysicalAddress(physicalAddress) != null) {
-            throw new IllegalStateException("code has been disassembled already");
-        }
         if (byteCount < 1) {
             throw new IllegalArgumentException("disassembled code must represent at least one byte, was: " + byteCount);
         }
@@ -73,26 +70,24 @@ public class Disassembler {
             InstructionFormat assumedFormat = element.getRight();
             int physicalAddress = AddressUtil.virtualToPhysical(virtualAddress);
 
-            // try/catch to add information in case of errors
-            try {
-
-                // check if this address was already disassembled, and if under the same assumptions
-                if (getDisassembledLinesForPhysicalAddress(physicalAddress) != null) {
-                    InstructionFormat alreadyDisassembledFormat = assumedInstructionFormats.get(physicalAddress);
-                    if (assumedFormat == alreadyDisassembledFormat || alreadyDisassembledFormat == InstructionFormat.UNKNOWN) {
-                        // nothing to do, we already disassembled this instruction
-                        return;
-                    }
-                    // we must disassemble this instruction again assuming UNKNOWN format since it is reachable with different formats
-                    assumedFormat = InstructionFormat.UNKNOWN;
+            // check if this address was already disassembled, and if under the same assumptions
+            if (getDisassembledLinesForPhysicalAddress(physicalAddress) != null) {
+                InstructionFormat alreadyDisassembledFormat = assumedInstructionFormats.get(physicalAddress);
+                assumedFormat = InstructionFormat.getCommon(assumedFormat, alreadyDisassembledFormat);
+                if (assumedFormat == alreadyDisassembledFormat) {
+                    // nothing to do, we already disassembled this instruction
+                    return;
                 }
+            }
+
+            // try/catch to show errors as comments in the disassembled result
+            try {
 
                 // decode the instruction
                 int opcode = rom[physicalAddress] & 0xff;
                 InstructionTable.Entry instruction = InstructionTable.TABLE[opcode];
                 if (instruction == null) {
-                    String line = ".db $" + Integer.toHexString(rom[physicalAddress] & 0xff) + " ; unknown opcode";
-                    setDisassembled(physicalAddress, assumedFormat, 1, augmentLine(virtualAddress, 1, line));
+                    onDisassemblyFailed(virtualAddress, physicalAddress, assumedFormat, "unknown opcode");
                     return;
                 }
                 int length = instruction.getLength().getActualLength(assumedFormat);
@@ -124,15 +119,47 @@ public class Disassembler {
                 }
                 InstructionTable.StaticJumpAddressingMode staticJumpAddressingMode = instruction.getStaticJumpAddressingMode();
                 if (staticJumpAddressingMode != null) {
-                    int jumpTarget = staticJumpAddressingMode.getJumpTarget(virtualAddress, immediateValue);
+                    int jumpTarget = staticJumpAddressingMode.getJumpTarget(virtualAddress, length, immediateValue);
                     virtualAddressTodoQueue.add(Pair.of(jumpTarget, nextFormat));
                 }
 
             } catch (Exception e) {
-                throw new KitException("failed to disassemble instruction at v0x" + Integer.toHexString(virtualAddress) +
-                        " = p0x" + Integer.toHexString(physicalAddress), e);
+                onDisassemblyFailed(virtualAddress, physicalAddress, assumedFormat, e.getMessage());
             }
         }
+    }
+
+    private void onDisassemblyFailed(int virtualAddress, int physicalAddress, InstructionFormat assumedFormat, String message) {
+
+        // determine the bounds of the previous instruction
+        int length = 1;
+        while (true) {
+            String[] fragment = codeFragments.get(physicalAddress);
+            if (fragment == null || fragment.length > 0) {
+                break;
+            }
+            physicalAddress--;
+            virtualAddress--;
+            length++;
+        }
+        while (true) {
+            String[] fragment = codeFragments.get(physicalAddress + length);
+            if (fragment == null || fragment.length > 0) {
+                break;
+            }
+            length++;
+        }
+
+        // turn those bytes back to raw data and append the message as a comment
+        StringBuilder lineBuilder = new StringBuilder();
+        for (int i = 0; i < length; i++) {
+            int romByte = rom[physicalAddress + i] & 0xff;
+            lineBuilder.append(i == 0 ? ".db $" : ", $");
+            lineBuilder.append(Integer.toHexString(romByte));
+        }
+        lineBuilder.append(" ; DISASSEMBLER ERROR AT v$" + Integer.toHexString(virtualAddress)).append(": ").append(message);
+        setDisassembled(physicalAddress, assumedFormat, length, augmentLine(virtualAddress, 1, lineBuilder.toString()));
+
     }
 
     private static String[] augmentLine(int virtualAddress, int length, String line) {
@@ -144,6 +171,9 @@ public class Disassembler {
     }
 
     private static boolean isPrintAddress(int address, int length) {
+
+        // TODO remove
+        if (1 == 1) return true;
 
         // print address for an instruction at a 16-byte boundary
         if ((address & 15) == 0) {
