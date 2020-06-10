@@ -25,7 +25,7 @@ public final class InstructionTable {
             new Entry("ORA ...", 4),
 
             // 10-17
-            null,
+            new Entry("BPL ...", 2).jumping(StaticJumpAddressingMode.K_BANK_RELATIVE_8),
             new Entry("ORA ...", 2),
             new Entry("ORA ...", 2),
             new Entry("ORA ...", 2),
@@ -45,9 +45,9 @@ public final class InstructionTable {
             new Entry("ORA ...", 4),
 
             // 20-27
-            null,
+            new Entry("JSR ...", 3).jumping(StaticJumpAddressingMode.K_BANK_ABSOLUTE),
             new Entry("AND ...", 2),
-            null,
+            new Entry("JSL ...", 4).jumping(StaticJumpAddressingMode.LONG),
             new Entry("AND ...", 2),
             new Entry("BIT ...", 2),
             new Entry("AND ...", 2),
@@ -65,7 +65,7 @@ public final class InstructionTable {
             new Entry("AND ...", 4),
 
             // 30-37
-            null,
+            new Entry("BMI ...", 2).jumping(StaticJumpAddressingMode.K_BANK_RELATIVE_8),
             new Entry("AND ...", 2),
             new Entry("AND ...", 2),
             new Entry("AND ...", 2),
@@ -99,13 +99,13 @@ public final class InstructionTable {
             new Entry("EOR ...", InstructionLength.A23),
             new Entry("LSR ...", 1),
             new Entry("PHK", 1),
-            null,
+            new Entry("JMP ...", 3).jumping(StaticJumpAddressingMode.K_BANK_ABSOLUTE).diverting(),
             new Entry("EOR ...", 3),
             new Entry("LSR ...", 3),
             new Entry("EOR ...", 4),
 
             // 50-57
-            null,
+            new Entry("BVC ...", 2).jumping(StaticJumpAddressingMode.K_BANK_RELATIVE_8),
             new Entry("EOR ...", 2),
             new Entry("EOR ...", 2),
             new Entry("EOR ...", 2),
@@ -119,7 +119,7 @@ public final class InstructionTable {
             new Entry("EOR ...", 3),
             new Entry("PHY", 1),
             new Entry("TCD", 1),
-            new Entry("JMP (long) to %l", 4).jumping(StaticJumpAddressingMode.LONG).diverting(),
+            new Entry("JML ...", 4).jumping(StaticJumpAddressingMode.LONG).diverting(),
             new Entry("EOR ...", 3),
             new Entry("LSR ...", 3),
             new Entry("EOR ...", 4),
@@ -139,13 +139,13 @@ public final class InstructionTable {
             new Entry("ADC ...", InstructionLength.A23),
             new Entry("ROR ...", 1),
             new Entry("RTL", 1),
-            null,
+            new Entry("JMP ...", 3).diverting(),
             new Entry("ADC ...", 3),
             new Entry("ROR ...", 3),
             new Entry("ADC ...", 4),
 
             // 70-77
-            null,
+            new Entry("BVS ...", 2).jumping(StaticJumpAddressingMode.K_BANK_RELATIVE_8),
             new Entry("ADC ...", 2),
             new Entry("ADC ...", 2),
             new Entry("ADC ...", 2),
@@ -159,15 +159,15 @@ public final class InstructionTable {
             new Entry("ADC ...", 3),
             new Entry("PLY", 1),
             new Entry("TDC", 1),
-            null,
+            new Entry("JMP ...", 3).diverting(),
             new Entry("ADC ...", 3),
             new Entry("ROR ...", 3),
             new Entry("ADC ...", 4),
 
             // 80-87
-            null,
+            new Entry("BRA ...", 2).jumping(StaticJumpAddressingMode.K_BANK_RELATIVE_8).diverting(),
             new Entry("STA ...", 2),
-            null,
+            new Entry("BRL ...", 3).jumping(StaticJumpAddressingMode.K_BANK_RELATIVE_16).diverting(),
             new Entry("STA ...", 2),
             new Entry("STY ...", 2),
             new Entry("STA ...", 2),
@@ -185,7 +185,7 @@ public final class InstructionTable {
             new Entry("STA ...", 4),
 
             // 90-97
-            null,
+            new Entry("BCC ...", 2).jumping(StaticJumpAddressingMode.K_BANK_RELATIVE_8),
             new Entry("STA ...", 2),
             new Entry("STA ...", 2),
             new Entry("STA ...", 2),
@@ -225,7 +225,7 @@ public final class InstructionTable {
             new Entry("LDA ...", 4),
 
             // b0-b7
-            null,
+            new Entry("BCS ...", 2).jumping(StaticJumpAddressingMode.K_BANK_RELATIVE_8),
             new Entry("LDA ...", 2),
             new Entry("LDA ...", 2),
             new Entry("LDA ...", 2),
@@ -247,7 +247,7 @@ public final class InstructionTable {
             // c0-c7
             new Entry("CPY ...", InstructionLength.X23),
             new Entry("CMP ...", 2),
-            null,
+            new Entry("REP ...", 2).withSpecialEffect(InstructionSpecialEffect.REP),
             new Entry("CMP ...", 2),
             new Entry("CPY ...", 2),
             new Entry("CMP ...", 2),
@@ -265,7 +265,7 @@ public final class InstructionTable {
             new Entry("CMP ...", 4),
 
             // d0-d7
-            null,
+            new Entry("BNE ...", 2).jumping(StaticJumpAddressingMode.K_BANK_RELATIVE_8),
             new Entry("CMP ...", 2),
             new Entry("CMP ...", 2),
             new Entry("CMP ...", 2),
@@ -279,7 +279,7 @@ public final class InstructionTable {
             new Entry("CMP ...", 3),
             new Entry("PHX", 1),
             new Entry("STP", 1),
-            null,
+            new Entry("JMP ...", 3).diverting(),
             new Entry("CMP ...", 3),
             new Entry("DEC ...", 3),
             new Entry("CMP ...", 4),
@@ -287,7 +287,7 @@ public final class InstructionTable {
             // e0-e7
             new Entry("CPX ...", InstructionLength.X23),
             new Entry("SBC ...", 2),
-            null,
+            new Entry("SEP ...", 2).withSpecialEffect(InstructionSpecialEffect.SEP),
             new Entry("SBC ...", 2),
             new Entry("CPX ...", 2),
             new Entry("SBC ...", 2),
@@ -305,7 +305,7 @@ public final class InstructionTable {
             new Entry("SBC ...", 4),
 
             // f0-f7
-            null,
+            new Entry("BEQ ...", 2).jumping(StaticJumpAddressingMode.K_BANK_RELATIVE_8),
             new Entry("SBC ...", 2),
             new Entry("SBC ...", 2),
             new Entry("SBC ...", 2),
@@ -319,7 +319,7 @@ public final class InstructionTable {
             new Entry("SBC ...", 3),
             new Entry("PLX", 1),
             new Entry("XCE", 1),
-            null,
+            new Entry("JSR ...", 3),
             new Entry("SBC ...", 3),
             new Entry("INC ...", 3),
             new Entry("SBC ...", 4),
@@ -332,7 +332,7 @@ public final class InstructionTable {
         private final InstructionLength length;
         private boolean divert;
         private StaticJumpAddressingMode staticJumpAddressingMode;
-        private InstructionSpecialEffect specialEffect;
+        private InstructionSpecialEffect specialEffect = InstructionSpecialEffect.NONE;
 
         private Entry(String mnemonic, InstructionLength length) {
             this.mnemonic = mnemonic;
@@ -382,16 +382,9 @@ public final class InstructionTable {
 
     public enum StaticJumpAddressingMode {
 
-        K_BANK_RELATIVE {
-            @Override
-            public int getJumpTarget(int instructionAddress, int immediate) {
-                throw new UnsupportedOperationException("not yet implemented");
-            }
-        },
-
         K_BANK_ABSOLUTE {
             @Override
-            public int getJumpTarget(int instructionAddress, int immediate) {
+            public int getJumpTarget(int instructionAddress, int instructionLength, int immediate) {
                 if (immediate < 0 || immediate > 0xffff) {
                     throw new IllegalArgumentException("invalid immediate value for K-bank absolute jump addressing: " + immediate);
                 }
@@ -401,15 +394,31 @@ public final class InstructionTable {
 
         LONG {
             @Override
-            public int getJumpTarget(int instructionAddress, int immediate) {
+            public int getJumpTarget(int instructionAddress, int instructionLength, int immediate) {
                 if (immediate < 0 || immediate > 0xffffff) {
                     throw new IllegalArgumentException("invalid immediate value for long jump addressing: " + immediate);
                 }
                 return immediate;
             }
+        },
+
+        K_BANK_RELATIVE_8 {
+            @Override
+            public int getJumpTarget(int instructionAddress, int instructionLength, int immediate) {
+                return (instructionAddress & 0xff0000) |
+                        ((instructionAddress + instructionLength + (byte)immediate) & 0xffff);
+            }
+        },
+
+        K_BANK_RELATIVE_16 {
+            @Override
+            public int getJumpTarget(int instructionAddress, int instructionLength, int immediate) {
+                return (instructionAddress & 0xff0000) |
+                        ((instructionAddress + instructionLength + (short)immediate) & 0xffff);
+            }
         };
 
-        public abstract int getJumpTarget(int instructionAddress, int immediate);
+        public abstract int getJumpTarget(int instructionAddress, int instructionLength, int immediate);
 
     }
 
