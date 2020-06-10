@@ -105,7 +105,8 @@ public class Disassembler {
                             immediateValue += romByte << (8 * (i - 1));
                         }
                     }
-                    lineBuilder.append(" ; ").append(instruction.getMnemonic());
+                    lineBuilder.append(" ; ").append(instruction.getMnemonic()).append(" ")
+                            .append(instruction.getAddressingMode().argumentToString(immediateValue));
                     instructionLine = lineBuilder.toString();
                 }
 
@@ -171,9 +172,6 @@ public class Disassembler {
     }
 
     private static boolean isPrintAddress(int address, int length) {
-
-        // TODO remove
-        if (1 == 1) return true;
 
         // print address for an instruction at a 16-byte boundary
         if ((address & 15) == 0) {
