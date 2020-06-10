@@ -12,24 +12,38 @@ import name.martingeisse.sneskit.util.KitException;
  * for decimal-mode, only the result of some operations is different.
  */
 enum InstructionFormat {
-    EMULATION(false, false),
-    NATIVE_A8_X8(false, false),
-    NATIVE_A8_X16(false, true),
-    NATIVE_A16_X8(true, false),
-    NATIVE_A16_X16(true, true),
-    UNKNOWN(false, false);
+    EMULATION(true, false, false),
+    NATIVE_A8_X8(false, false, false),
+    NATIVE_A8_X16(false, false, true),
+    NATIVE_A8_XU(false, false, null),
+    NATIVE_A16_X8(false, true, false),
+    NATIVE_A16_X16(false, true, true),
+    NATIVE_A16_XU(false, true, null),
+    NATIVE_AU_X8(false, null, false),
+    NATIVE_AU_X16(false, null, true),
+    NATIVE_AU_XU(false, null, null),
+    UNKNOWN(null, null, null);
 
-    private final boolean wideAccumulator;
-    private final boolean wideIndex;
+    private final Boolean emulated;
+    private final Boolean wideAccumulator;
+    private final Boolean wideIndex;
 
-    InstructionFormat(boolean wideAccumulator, boolean wideIndex) {
+    InstructionFormat(Boolean emulated, Boolean wideAccumulator, Boolean wideIndex) {
+        this.emulated = emulated;
         this.wideAccumulator = wideAccumulator;
         this.wideIndex = wideIndex;
     }
 
+    public boolean isEmulated() {
+        if (emulated == null) {
+            throw new KitException("trying to get the emulated-ness for an instruction format that does not know it: " + this);
+        }
+        return emulated;
+    }
+
     public boolean isWideAccumulator() {
-        if (this == UNKNOWN) {
-            throw new KitException("trying to get the A size for an unknown instruction format");
+        if (wideAccumulator == null) {
+            throw new KitException("trying to get the A size for an instruction format that does not know it: " + this);
         }
         return wideAccumulator;
     }
@@ -39,14 +53,57 @@ enum InstructionFormat {
     }
 
     public boolean isWideIndex() {
-        if (this == UNKNOWN) {
-            throw new KitException("trying to get the X size for an unknown instruction format");
+        if (wideIndex == null) {
+            throw new KitException("trying to get the X size for an instruction format that does not know it: " + this);
         }
         return wideIndex;
     }
 
     public int getIndexBytes() {
         return isWideIndex() ? 2 : 1;
+    }
+
+    public static InstructionFormat getCommon(InstructionFormat a, InstructionFormat b) {
+        if (a == b) {
+            return a;
+        }
+        if (a == UNKNOWN || b == UNKNOWN) {
+            return UNKNOWN;
+        }
+        if (a == EMULATION || b == EMULATION) {
+            return UNKNOWN;
+        }
+        Boolean wideAccumulator = getCommon(a.wideAccumulator, b.wideAccumulator);
+        Boolean wideIndex = getCommon(a.wideIndex, b.wideIndex);
+        return getNativeFormat(wideAccumulator, wideIndex);
+    }
+
+    private static Boolean getCommon(Boolean a, Boolean b) {
+        return (a == null || b == null) ? null : a.booleanValue() == b.booleanValue() ? a : null;
+    }
+
+    private static InstructionFormat getNativeFormat(Boolean wideAccumulator, Boolean wideIndex) {
+        if (wideAccumulator == null) {
+            return wideIndex == null ? NATIVE_AU_XU : wideIndex ? NATIVE_AU_X16 : NATIVE_AU_X8;
+        } else if (wideAccumulator) {
+            return wideIndex == null ? NATIVE_A16_XU : wideIndex ? NATIVE_A16_X16 : NATIVE_A16_X8;
+        } else {
+            return wideIndex == null ? NATIVE_A8_XU : wideIndex ? NATIVE_A8_X16 : NATIVE_A8_X8;
+        }
+    }
+
+    public InstructionFormat getWithWideAccumulatorSet(boolean wideAccumulator) {
+        if (this == UNKNOWN || this == EMULATION) {
+            return this;
+        }
+        return getNativeFormat(wideAccumulator, wideIndex);
+    }
+
+    public InstructionFormat getWithWideIndexSet(boolean wideIndex) {
+        if (this == UNKNOWN || this == EMULATION) {
+            return this;
+        }
+        return getNativeFormat(wideAccumulator, wideIndex);
     }
 
 }

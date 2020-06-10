@@ -59,8 +59,6 @@ public class Disassembler {
 
 //region instruction disassembling
 
-    // virtualAddressTodoQueue
-
     public void disassemble(int virtualAddress, InstructionFormat assumedFormat) {
         virtualAddressTodoQueue.add(Pair.of(virtualAddress, assumedFormat));
         processTodoQueue();
@@ -68,11 +66,17 @@ public class Disassembler {
 
     public void processTodoQueue() {
         while (!virtualAddressTodoQueue.isEmpty()) {
+
+            // take an element from the to-do queue, map to physical address
             Pair<Integer, InstructionFormat> element = virtualAddressTodoQueue.poll();
             int virtualAddress = element.getLeft();
             InstructionFormat assumedFormat = element.getRight();
             int physicalAddress = AddressUtil.virtualToPhysical(virtualAddress);
+
+            // try/catch to add information in case of errors
             try {
+
+                // check if this address was already disassembled, and if under the same assumptions
                 if (getDisassembledLinesForPhysicalAddress(physicalAddress) != null) {
                     InstructionFormat alreadyDisassembledFormat = assumedInstructionFormats.get(physicalAddress);
                     if (assumedFormat == alreadyDisassembledFormat || alreadyDisassembledFormat == InstructionFormat.UNKNOWN) {
@@ -82,22 +86,22 @@ public class Disassembler {
                     // we must disassemble this instruction again assuming UNKNOWN format since it is reachable with different formats
                     assumedFormat = InstructionFormat.UNKNOWN;
                 }
+
+                // decode the instruction
                 int opcode = rom[physicalAddress] & 0xff;
                 InstructionTable.Entry instruction = InstructionTable.TABLE[opcode];
-                String instructionLine;
-                int length;
-                boolean divert;
-                int jumpTarget;
                 if (instruction == null) {
-                    // at least we tried
-                    instructionLine = ".db $" + Integer.toHexString(rom[physicalAddress] & 0xff) + " ; disassembly failed";
-                    length = 1;
-                    divert = true;
-                    jumpTarget = -1;
-                } else {
+                    String line = ".db $" + Integer.toHexString(rom[physicalAddress] & 0xff) + " ; unknown opcode";
+                    setDisassembled(physicalAddress, assumedFormat, 1, augmentLine(virtualAddress, 1, line));
+                    return;
+                }
+                int length = instruction.getLength().getActualLength(assumedFormat);
+
+                // generate assembler text for the instruction; at the same time, rebuild its immediate value
+                String instructionLine;
+                int immediateValue = 0;
+                {
                     StringBuilder lineBuilder = new StringBuilder();
-                    length = instruction.getLength().getActualLength(assumedFormat);
-                    int immediateValue = 0;
                     for (int i = 0; i < length; i++) {
                         int romByte = rom[physicalAddress + i] & 0xff;
                         lineBuilder.append(i == 0 ? ".db $" : ", $");
@@ -108,28 +112,34 @@ public class Disassembler {
                     }
                     lineBuilder.append(" ; ").append(instruction.getMnemonic());
                     instructionLine = lineBuilder.toString();
-                    divert = instruction.isDivert();
-                    InstructionTable.StaticJumpAddressingMode staticJumpAddressingMode = instruction.getStaticJumpAddressingMode();
-                    if (staticJumpAddressingMode == null) {
-                        jumpTarget = -1;
-                    } else {
-                        jumpTarget = staticJumpAddressingMode.getJumpTarget(virtualAddress, immediateValue);
-                    }
                 }
-                String[] lines = isPrintAddress(virtualAddress, length) ?
-                        new String[]{"; virtual address: $" + Integer.toHexString(virtualAddress), instructionLine} :
-                        new String[]{instructionLine};
-                setDisassembled(physicalAddress, assumedFormat, length, lines);
-                if (!divert) {
-                    virtualAddressTodoQueue.add(Pair.of(virtualAddress + length, assumedFormat));
+
+                // store the disassembled instruction
+                setDisassembled(physicalAddress, assumedFormat, length, augmentLine(virtualAddress, length, instructionLine));
+
+                // go on disassembling the next and/or jumped-to instruction
+                InstructionFormat nextFormat = instruction.getSpecialEffect().getNextInstructionFormat(assumedFormat, immediateValue);
+                if (!instruction.isDivert()) {
+                    virtualAddressTodoQueue.add(Pair.of(virtualAddress + length, nextFormat));
                 }
-                if (jumpTarget != -1) {
-                    virtualAddressTodoQueue.add(Pair.of(jumpTarget, assumedFormat));
+                InstructionTable.StaticJumpAddressingMode staticJumpAddressingMode = instruction.getStaticJumpAddressingMode();
+                if (staticJumpAddressingMode != null) {
+                    int jumpTarget = staticJumpAddressingMode.getJumpTarget(virtualAddress, immediateValue);
+                    virtualAddressTodoQueue.add(Pair.of(jumpTarget, nextFormat));
                 }
+
             } catch (Exception e) {
                 throw new KitException("failed to disassemble instruction at v0x" + Integer.toHexString(virtualAddress) +
                         " = p0x" + Integer.toHexString(physicalAddress), e);
             }
+        }
+    }
+
+    private static String[] augmentLine(int virtualAddress, int length, String line) {
+        if (isPrintAddress(virtualAddress, length)) {
+            return new String[]{"; virtual address: $" + Integer.toHexString(virtualAddress), line};
+        } else {
+            return new String[]{line};
         }
     }
 

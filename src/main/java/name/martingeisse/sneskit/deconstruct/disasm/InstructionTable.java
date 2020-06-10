@@ -332,28 +332,29 @@ public final class InstructionTable {
         private final InstructionLength length;
         private boolean divert;
         private StaticJumpAddressingMode staticJumpAddressingMode;
+        private InstructionSpecialEffect specialEffect;
 
-        private Entry(String mnemonic, InstructionLength length, boolean divert) {
+        private Entry(String mnemonic, InstructionLength length) {
             this.mnemonic = mnemonic;
             this.length = length;
-            this.divert = divert;
         }
 
-        public Entry(String mnemonic, InstructionLength length) {
-            this(mnemonic, length, false);
+        private Entry(String mnemonic, int length) {
+            this(mnemonic, InstructionLength.getFixed(length));
         }
 
-        public Entry(String mnemonic, int length) {
-            this(mnemonic, InstructionLength.getFixed(length), false);
-        }
-
-        public Entry diverting() {
+        private Entry diverting() {
             divert = true;
             return this;
         }
 
-        public Entry jumping(StaticJumpAddressingMode mode) {
+        private Entry jumping(StaticJumpAddressingMode mode) {
             this.staticJumpAddressingMode = mode;
+            return this;
+        }
+
+        private Entry withSpecialEffect(InstructionSpecialEffect specialEffect) {
+            this.specialEffect = specialEffect;
             return this;
         }
 
@@ -371,6 +372,10 @@ public final class InstructionTable {
 
         public StaticJumpAddressingMode getStaticJumpAddressingMode() {
             return staticJumpAddressingMode;
+        }
+
+        public InstructionSpecialEffect getSpecialEffect() {
+            return specialEffect;
         }
 
     }
